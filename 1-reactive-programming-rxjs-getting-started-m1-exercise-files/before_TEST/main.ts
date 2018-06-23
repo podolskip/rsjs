@@ -1,4 +1,10 @@
-import { Observable, Observer, Subject, ReplaySubject, from, of, range } from 'rxjs';
+// import { Observer, Subject, ReplaySubject,  of, range } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { Observer } from 'rxjs/Observer';
+import { from } from 'rxjs/Observable/from';
+import  'rxjs/add/operator/map';
+import 'rxjs/add/operator/filter';
+
 
 // window.alert('ok!!!!');
 
@@ -27,7 +33,13 @@ let source2 = Observable.create(observer => {
     }
 
     produceValur();
+}).map((n: any): number => {
+    return n * 2;
+})
+.filter((n: number): boolean => {
+    return n > 8;
 });
+
 
 
 
