@@ -6,6 +6,10 @@ import  'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/delay';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/retry';
+import 'rxjs/add/operator/retryWhen';
+import 'rxjs/add/operator/scan';
+import 'rxjs/add/operator/takeWhile';
 import { Subscriber } from 'rxjs';
 
 interface IobjectXY {
@@ -79,14 +83,32 @@ let load = (url: string) => {
         let xhr: XMLHttpRequest = new XMLHttpRequest();
     
         xhr.addEventListener("load",() => {
-            let data: Array<Imovie> = JSON.parse(xhr.responseText);   
-            observer.next(data);
+            if ( xhr.status === 200 ){
+                let data: Array<Imovie> = JSON.parse(xhr.responseText);   
+                observer.next(data);
+                observer.complete();
+            } else {
+               observer.error(xhr.status);
+            }
         });
     
         xhr.open("GET", url);
         xhr.send();
 
     })
+    // .retry(3);
+    .retryWhen(errorStrategy({attempts: 3, delay: 1500}))
+}
+
+let errorStrategy = ({attempts = 4, delay = 1000}) => {
+    return (errors: any) => {
+        return errors
+            .scan((acc, value) => {
+                return acc + 1;
+            }, 0)
+            .takeWhile(acc => acc < attempts)
+            .delay(delay); 
+    };
 }
 
 const renderMovies = (movies: Array<Imovie>) => {
@@ -98,7 +120,7 @@ const renderMovies = (movies: Array<Imovie>) => {
 }
 
 
-source2.mergeMap(e => load("movies.json"))
+source2.mergeMap(e => load("moviess.json"))
 .subscribe(
     (movies: Array<Imovie>) => {
         return renderMovies(movies);
