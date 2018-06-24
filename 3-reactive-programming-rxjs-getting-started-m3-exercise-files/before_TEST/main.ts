@@ -2,6 +2,8 @@ import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 import { from } from 'rxjs/Observable/from';
 import { fromEvent } from 'rxjs/Observable/fromEvent';
+import { fromPromise } from 'rxjs/Observable/fromPromise';
+import { defer } from 'rxjs/Observable/defer';
 import  'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/delay';
@@ -97,7 +99,13 @@ let load = (url: string) => {
 
     })
     // .retry(3);
-    .retryWhen(errorStrategy({attempts: 3, delay: 1500}))
+    .retryWhen(errorStrategy({attempts: 3, delay: 1500}));
+}
+
+const loadWithFetch = (url: string): Observable<{}> => {
+    return defer(() => {
+        return fromPromise(fetch(url).then((r: any): Array<JSON> => r.json()));
+    });
 }
 
 let errorStrategy = ({attempts = 4, delay = 1000}) => {
@@ -120,7 +128,8 @@ const renderMovies = (movies: Array<Imovie>) => {
 }
 
 
-source2.mergeMap(e => load("moviess.json"))
+// source2.mergeMap(e => load("movies.json"))
+source2.mergeMap(e => loadWithFetch("movies.json"))
 .subscribe(
     (movies: Array<Imovie>) => {
         return renderMovies(movies);
